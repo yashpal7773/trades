@@ -1,0 +1,279 @@
+Yeh raha ek single, copy-paste ready **Replit AI prompt** for your project. Isko as-is Replit ke AI me daal sakta hai.
+
+---
+
+```text
+You are an expert full-stack engineer (React + TypeScript + Python FastAPI) and quantitative developer building a production-grade FinTech web app on Replit.
+
+Build a complete, runnable project in this Replit workspace that implements the following specification. DO NOT use any mock data, random data, CSVs, or hard-coded candles. Always fetch **real-time market data** from a live API at runtime (e.g., Alpha Vantage, Finnhub, Polygon, Yahoo Finance, or any other free-tier market API). All secrets must come from environment variables.
+
+================================================
+PROJECT: AI Trading Battle Arena – Multi-Agent RL
+================================================
+
+### 0. General Requirements
+- Stack:
+  - **Frontend:** React + TypeScript + Vite (or CRA) in `/frontend`
+  - **Styling:** Tailwind CSS + custom CSS variables for theme.
+  - **Charts:** TradingView-style candlestick chart using `lightweight-charts` or a similar charting library.
+  - **Backend:** Python **FastAPI** in `/backend`.
+  - **DB:** SQLite via SQLAlchemy for Replit simplicity (schema must support users, trades, portfolio, and AI weights).
+  - **Realtime updates:** Use WebSockets (FastAPI WebSocket) for:
+    - live price updates,
+    - live trade markers (BUY/SELL),
+    - debate logs streaming from the AIs.
+- **ABSOLUTE RULE:**  
+  > Do NOT use mock data. Use **real-time market data** only.  
+  - Create a `MARKET_DATA_API_KEY` env var and read it in the backend.
+  - Provide a clear fallback mechanism if API rate-limits hit (e.g., lower frequency, but still from the API, not static).
+- Provide:
+  - A root `README.md` with exact commands to run backend and frontend on Replit.
+  - Clear `.env.example` with all required keys (market data + LLM APIs).
+
+--------------------------------
+1. Visual Identity & Layout (UI)
+--------------------------------
+Implement a **Deep Ocean (Dark Mode)** theme exactly as follows:
+
+- Colors:
+  - `--bg-primary: #0B1026` (main background)
+  - `--bg-secondary: #151E3F` (cards/panels)
+  - `--accent-green: #00FF94` (profit / positive)
+  - `--accent-red: #FF4B4B` (loss / negative)
+  - `--text-main: #FFFFFF`
+  - `--text-muted: #B0B3C5`
+- Layout:
+  - Left fixed sidebar with navigation:
+    - Dashboard
+    - Portfolio
+    - Account
+    - Graphs (Analytics)
+    - AI Trading (main tab)
+  - Main content to the right of the sidebar, responsive.
+
+Implement the following screens:
+
+### A. Dashboard
+- **User Profile Card** (top-left in main area):
+  - Avatar (placeholder circle with initials).
+  - Username.
+  - “Pro Trader” badge.
+- **Quick Stats**:
+  - Total Net Worth (calculated from portfolio and latest prices).
+    - If positive change today → accent green.
+    - If negative change today → accent red.
+  - Today’s P&L.
+  - Active AI Agents count (e.g., “4 / 4”).
+- **Recent Activity Feed**:
+  - Last 3 executed trades:
+    - Timestamp, Ticker, Action (BUY/SELL), P&L for that trade.
+
+### B. Portfolio
+- **Lifetime P&L**:
+  - Big number at top.
+  - Green with ▲ arrow if net positive.
+  - Red with ▼ arrow if net negative.
+- **Asset Allocation Pie Chart**:
+  - Real-time breakdown based on current holdings (e.g., 40% cash, 60% TSLA).
+- **History Table**:
+  - Columns: Date, Stock, Strategy Used, Quantity, Entry Price, Exit Price (if closed), Profit/Loss.
+
+### C. Account
+- **Paper Trading Balance**:
+  - Show current virtual balance (e.g., starting at 100,000.00).
+- **`[ + Add Paper Money ]` Button**:
+  - Opens a modal:
+    - Options: “Top Up 10,000”, “Reset to 100,000”.
+- **Settings**:
+  - Inputs for API keys (saved to backend DB, but used as env lookup or secure storage where possible):
+    - Market Data API Key.
+    - LLM API keys for:
+      - ChatGPT
+      - Gemini
+      - Grok
+      - DeepSeek
+
+### D. Graphs (Analytics)
+- **Accuracy Heatmap**:
+  - A grid visualization showing per-agent correctness over time:
+    - X-axis: Time / Trade index.
+    - Y-axis: Agents (ChatGPT, Gemini, Grok, DeepSeek).
+    - Cell color → correctness / profit contribution.
+- **AI Power Rankings**:
+  - Bar chart showing each AI’s current effective “Voting Power”.
+- **Performance vs Market**:
+  - Line graph with:
+    - AI Fund equity curve.
+    - Benchmark (e.g., S&P 500 or chosen index from real-time data API).
+
+-------------------------
+2. Core "AI Trading" Tab
+-------------------------
+Structure the main AI Trading screen into three regions:
+
+1. **Top:** Live candlestick chart for selected stock.
+   - Real-time candles from market data API.
+   - Overlay markers for BUY / SELL / HOLD decisions.
+2. **Bottom Left – Debate Arena**:
+   - Chat-log style UI where 4 AI agents “speak”.
+   - Show avatar + name + message bubble.
+3. **Bottom Right – Control & Status Panel**:
+   - Voting bars for stocks and strategies.
+   - Action buttons.
+
+### Flow: Trading Cycle
+
+#### Step 1: Initiation
+- Green button: `[ START TRADING CYCLE ]`.
+- Status text: `Waiting for user input...` then update as cycle progresses.
+
+#### Step 2: Stock Selection & Debate
+- When cycle starts:
+  - 4 AIs (ChatGPT, Gemini, Grok, DeepSeek) each propose a stock ticker (e.g., NVDA, AMD, TSLA).
+  - Backend:
+    - There is a **Moderator Agent** that:
+      - Sends a consistent system prompt to each LLM:
+        > “You are a ruthless hedge fund trader. Propose ONE liquid stock ticker for the next short-term trade. Justify using current fundamentals/technicals/news. Critique bad ideas from other agents.”
+    - Each AI returns:
+      - Proposed ticker.
+      - Justification.
+  - Debate:
+    - Round of messages:
+      - Each AI can see others’ proposals (through Moderator) and critique.
+      - Log these in the Debate Arena UI.
+  - Voting:
+    - Use **Stock Weight** for each AI (from DB) to compute weighted votes.
+    - Display horizontal bars under each candidate stock with percentages based on these weights.
+- Outcome:
+  - Lock in the winning stock (max weighted vote).
+  - Update status: `Selected Stock: <TICKER>`.
+
+#### Step 3: Strategy Formulation
+- After stock is chosen:
+  - Each AI proposes a **trading strategy** for that stock:
+    - Examples: “5-min scalping momentum”, “Swing trade for 3 days”, “Mean reversion intraday”, etc.
+  - Debate:
+    - Similar discussion/critique logged in Arena.
+  - Strategy Voting:
+    - Use **Strategy Weight** for each AI to vote on the proposed strategies.
+    - Display voting bars.
+- Outcome:
+  - Lock in winning strategy (e.g., “Breakout Momentum”).
+
+#### Step 4: Execution & Live Trading (RL)
+- Backend starts **Reinforcement Learning trading loop**:
+  - Uses real-time price data for the selected ticker.
+  - Simple RL structure (e.g., discrete actions: BUY, SELL, HOLD; state from recent price window + indicators).
+  - Reward = change in portfolio value (unrealized + realized P&L).
+  - Trade decisions are influenced by:
+    - The **Trading Weight** of agents.
+    - Their previous performance and recommended actions.
+- Frontend:
+  - Live chart updates via WebSocket.
+  - Show markers:
+    - BUY, SELL, HOLD, maybe PUT (if you include options).
+- Emergency:
+  - Red button `[ ⏹ EMERGENCY STOP ]`:
+    - Immediately stops RL loop.
+    - Liquidates open positions in simulation.
+    - Updates portfolio and DB.
+
+--------------------------------------
+3. Reward & Voting Weight System (RL)
+--------------------------------------
+Implement the “gamified” weight system with three separate weights **per AI**:
+
+- `stock_weight`
+- `strategy_weight`
+- `trading_weight`
+
+Initial state:
+- All agents start at 1.0 for each weight.
+
+Weight update rules after each cycle:
+
+| Event              | Winner ΔWeight     | Losers ΔWeight     |
+|--------------------|--------------------|--------------------|
+| Best Stock Pick    | +0.05 (stock)      | -0.02 (stock)      |
+| Best Strategy      | +0.10 (strategy)   | -0.05 (strategy)   |
+| Profitable Trade   | +0.15 (trading)    | -0.05 (trading)    |
+
+- “Best Stock Pick” = stock that led to highest profit in that cycle.
+- “Best Strategy” = strategy attached to that cycle showing highest expected or realized profit.
+- “Profitable Trade” outcome:
+  - If overall trade P&L > 0 → agents that pushed for that decision are winners.
+  - If P&L < 0 → they lose weight, others gain or stay same based on logic defined in code.
+
+Persist all weights in DB, and use them:
+- During **stock voting**, use `stock_weight`.
+- During **strategy voting**, use `strategy_weight`.
+- During **live decision adjustments**, use `trading_weight` to scale each agent’s influence.
+
+In the **Graphs** tab:
+- Show bar chart of current power levels (the three weights per agent or a combined score).
+- If an AI keeps winning, its bar becomes visually larger to show dominance.
+
+-----------------------
+4. Technical Details
+-----------------------
+Backend (FastAPI):
+- Endpoints:
+  - `/api/market/price-stream/{ticker}` – WebSocket streaming of live prices.
+  - `/api/trading/start-cycle` – starts a trading cycle.
+  - `/api/trading/stop-cycle` – stops RL loop and liquidates.
+  - `/api/settings` – GET/POST settings (API keys, starting balance, etc.).
+  - `/api/portfolio` – current positions, cash, P&L.
+  - `/api/history` – trade history for tables/graphs.
+  - `/api/ai/weights` – get/update AI weights.
+- Integrate with real-time data provider:
+  - Actual HTTP calls to a real API using `MARKET_DATA_API_KEY`.
+  - No dummy endpoints or hard-coded series.
+
+AI Orchestration:
+- Use a small orchestration layer (you may use LangChain or a simple custom wrapper).
+- For each agent:
+  - Read its specific API key from env:
+    - `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GROK_API_KEY`, `DEEPSEEK_API_KEY` (names are examples; document them).
+- Implement Moderator logic to run:
+  - Stock proposal round.
+  - Debate round.
+  - Strategy proposal and debate.
+
+Frontend:
+- Use a global state store (Zustand or Redux) for:
+  - User stats.
+  - Active ticker / strategy.
+  - Debate log.
+  - Weights summary.
+- Use WebSocket client for:
+  - Price stream.
+  - Trade markers and RL status.
+- Implement all UI sections described:
+  - Dashboard, Portfolio, Account, Graphs, AI Trading.
+
+-----------------------
+5. Developer Experience
+-----------------------
+- Add a `README.md` explaining:
+  - How to set env vars on Replit.
+  - How to run backend and frontend together.
+  - Which API to sign up for to get free real-time data.
+- Include simple unit tests for:
+  - Weight update logic.
+  - RL reward calculation.
+  - Portfolio P&L computation.
+
+Again: **Do not use mock data**. Every chart and trading decision must be driven by actual, live market data from a real API (subject to free-tier limits). If rate-limited, degrade gracefully but never fall back to static dummy candles.
+
+Now create all necessary files, folders, configs, and starter RL logic so the project runs end-to-end in this Replit environment.
+
+
+
+
+API KEYS ```-gemini api key =AIzaSyCaDT9IjanihJS4k4h9ZtsmAYlp88_n9to
+
+GROK API =xai-evl7OHj9LCK2rRoQpx919rm1GLCdlLYTehowScJ34bwgZgQlXpehNk392rqotD9MXbRX2UH7jdsXO7dY
+
+OPEN AI KEY =xai-evl7OHj9LCK2rRoQpx919rm1GLCdlLYTehowScJ34bwgZgQlXpehNk392rqotD9MXbRX2UH7jdsXO7dY
+
+deepseek =xai-evl7OHj9LCK2rRoQpx919rm1GLCdlLYTehowScJ34bwgZgQlXpehNk392rqotD9MXbRX2UH7jdsXO7dY
