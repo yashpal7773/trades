@@ -81,6 +81,14 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        profit: "hsl(var(--profit) / <alpha-value>)",
+        loss: "hsl(var(--loss) / <alpha-value>)",
+        agent: {
+          chatgpt: "#10A37F",
+          gemini: "#8E75B2",
+          grok: "#1DA1F2",
+          deepseek: "#FF6B35",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
