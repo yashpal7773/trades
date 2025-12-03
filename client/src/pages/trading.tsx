@@ -18,6 +18,9 @@ import {
   TrendingUp
 } from "lucide-react";
 
+// 1. Get backend URL from env
+const BASE_URL = import.meta.env.VITE_API_URL || "";
+
 export default function Trading() {
   const { 
     currentTicker, 
@@ -35,8 +38,16 @@ export default function Trading() {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    // 2. Logic to determine the correct WebSocket URL
+    let wsUrl;
+    if (BASE_URL) {
+      // Replace http/https with ws/wss from the env variable
+      wsUrl = BASE_URL.replace(/^http/, "ws") + "/ws";
+    } else {
+      // Fallback for local development
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      wsUrl = `${protocol}//${window.location.host}/ws`;
+    }
     
     const connectWebSocket = () => {
       const ws = new WebSocket(wsUrl);
@@ -101,7 +112,12 @@ export default function Trading() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const response = await fetch(`/api/market/candles/${currentTicker}`);
+        // 3. Use the full BASE_URL for the initial fetch as well
+        const url = BASE_URL 
+          ? `${BASE_URL}/api/market/candles/${currentTicker}`
+          : `/api/market/candles/${currentTicker}`;
+
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           if (data.candles) {
