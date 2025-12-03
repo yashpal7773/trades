@@ -1,5 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// 1. Get the backend URL from environment variables
+const BASE_URL = import.meta.env.VITE_API_URL || "";
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -12,11 +15,14 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // 2. Prepend the backend URL if it's an API call
+  const fullUrl = url.startsWith("/api") ? `${BASE_URL}${url}` : url;
+
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    // credentials: "include", // Commented out to avoid CORS issues across domains
   });
 
   await throwIfResNotOk(res);
@@ -29,8 +35,12 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
-      credentials: "include",
+    // 3. Ensure React Query fetches also use the full URL
+    const path = queryKey.join("/");
+    const fullUrl = path.startsWith("/api") ? `${BASE_URL}${path}` : path;
+
+    const res = await fetch(fullUrl, {
+      // credentials: "include", // Commented out to avoid CORS issues
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
